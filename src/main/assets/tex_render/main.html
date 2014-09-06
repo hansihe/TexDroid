@@ -1,0 +1,67 @@
+<html>
+    <head>
+        <script type="text/x-mathjax-config">
+            MathJax.Hub.Config({
+                jax: ["input/TeX","output/SVG"],
+                extensions: ["tex2jax.js","MathMenu.js","MathZoom.js"],
+                TeX: {
+                    extensions: ["AMSmath.js","AMSsymbols.js"] //,"noErrors.js","noUndefined.js"]
+                },
+                imageFont: null
+            });
+        </script>
+        <script src="file:///android_asset/tex_render/mathjax/MathJax.js"></script>
+        <script>
+            // Called by God (Android) when he wants to execute a new job.
+            function processTex(tex) {
+                renderTex(tex, function() {
+                    var mathSvg = getMathSvg(); // Use the original SVG DOM Node to calculate dimensions, as that doesn't work on Nodes not added to the DOM.
+                    var width = mathSvg.offsetWidth;
+                    var height = mathSvg.offsetHeight;
+
+                    var mergedSvg = mergeSvg();
+                    mergedSvg.removeAttribute("style");
+                    mergedSvg.setAttribute("preserveAspectRatio", "xMinYMin meet");
+
+                    AndroidServiceInterface.returnResult(mergedSvg.outerHTML,
+                        width,
+                        height);
+                });
+            }
+
+            function renderTex(tex, callback) {
+                MathJax.Hub.Queue(["Text", mathRender, tex], function() {
+                    callback();
+                });
+            }
+
+            function mergeSvg() {  // Merge the definition and math SVG Nodes. Returns a single SVG element containing everything needed to render the result.
+                var glyphDefs = getDefinitionSvg().getElementById("MathJax_SVG_glyphs").cloneNode(true);
+                var mathSvg = getMathSvg().cloneNode(true);
+                mathSvg.appendChild(glyphDefs);
+                return mathSvg;
+            }
+
+            function getDefinitionSvg() {  // The definition SVG is where MathJax shoves all the glyphs.
+                return document.getElementById("MathJax_SVG_Hidden").parentElement.getElementsByTagName("svg")[0];
+            }
+
+            function getMathSvg() {  // The business end. This is where the actual math is stored.
+                return document.getElementById("MathJax-Element-1-Frame").getElementsByTagName("svg")[0];
+            }
+
+            MathJax.Hub.Register.StartupHook("End", function() {
+                console.log("MathJax loading finished.");
+
+                mathRender = MathJax.Hub.getAllJax("MathRender")[0];
+
+                AndroidServiceInterface.initialize();
+            });
+        </script>
+    </head>
+    <body>
+        <div id="MathRender">
+            <script type="math/tex">{}</script>
+        </div>
+    </body>
+</html>
