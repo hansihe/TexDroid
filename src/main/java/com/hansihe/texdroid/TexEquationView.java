@@ -53,7 +53,7 @@ public class TexEquationView extends WebView {
             }
         }
 
-        new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
+        gestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
             public void onLongPress(MotionEvent e) {
                 Log.d("TexEquationView", "LongPress");
             }
